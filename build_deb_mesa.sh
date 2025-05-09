@@ -132,7 +132,7 @@ EOF
 }
 
 #===============================================================================
-# 7) Assembly + packaging for a given ARCH
+# 7) Building for a given ARCH
 #===============================================================================
 build_and_package() {
   ARCH="$1"; CFG="$2"; DEST="$3"
@@ -179,7 +179,17 @@ build_and_package() {
   dpkg-deb -e mesa-vulkan-drivers_*_"$DEB_ARCH".deb "$DEST/DEBIAN"
   sed -i "s/^Version:.*/Version: $MESA_VER-$DATE/" "$DEST/DEBIAN/control"
   dpkg-deb --build "$DEST"
-  rm -f mesa-vulkan-drivers_*_"$DEB_ARCH".deb
+}
+
+#===============================================================================
+# 8) Update /etc/environment for Vulkan ICDs and Turnip debug
+#===============================================================================
+update_environment() {
+  # ensure our variables are present
+  grep -qxF 'VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json:/usr/share/vulkan/icd.d/freedreno_icd.armhf.json"' /etc/environment \
+    || echo 'VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json:/usr/share/vulkan/icd.d/freedreno_icd.armhf.json"' >> /etc/environment
+  grep -qxF 'TU_DEBUG="noconform"' /etc/environment \
+    || echo 'TU_DEBUG="noconform"' >> /etc/environment
 }
 
 #===============================================================================
@@ -195,7 +205,7 @@ main() {
   echo ">> Fetching patch repository..."
   fetch_patches_repo
 
-  echo ">> Downloading Mesa source..."
+  echo ">> Downloading Mesa..."
   download_unpack
 
   echo ">> Applying patches to Mesa..."
@@ -213,6 +223,9 @@ main() {
   echo ">> Building for armhf..."
   build_and_package armhf "$BUILD_DIR/cross_armhf.txt" \
     "$BUILD_DIR/mesa-vk-kgsl_${MESA_VER}-${DATE}-${CODENAME}_armhf"
+
+  echo ">> Updating /etc/environment..."
+  update_environment
 
   echo ">> Build complete. Packages in $BUILD_DIR"
 }
