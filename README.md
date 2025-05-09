@@ -4,7 +4,7 @@ This script will “attempt” to build mesa-turnip-kgsl. Suitable for Ubuntu. U
 
 Quick Start build (will require downloading a large amount of these packages and sources):
 
-```
+```sh
 bash <(wget -qO- https://github.com/DvaMishkiLapa/mesa-turnip-kgsl-build/raw/main/build_deb_mesa.sh)
 ```
 
@@ -17,8 +17,7 @@ bash <(wget -qO- https://github.com/DvaMishkiLapa/mesa-turnip-kgsl-build/raw/mai
 # Tested environment
 
 - [Samsung Galaxy Tab A9+ 5G (SM6375)](https://www.devicespecifications.com/en/model/3e1d5e00)
-  - Android 14 OneUI6.1 + Root with [Apatch](https://github.com/bmax121/APatch);
-  - Chroot Ubuntu 24.04 via [chroot-distro](https://github.com/Magisk-Modules-Alt-Repo/chroot-distro).
+  - Chroot Ubuntu 24.04 via [chroot-distro](https://github.com/Magisk-Modules-Alt-Repo/chroot-distro) on Android 14 OneUI6.1 + Root with [Apatch](https://github.com/bmax121/APatch).
 
 # Latest tested Mesa Config
 
