@@ -48,13 +48,14 @@ install_deps() {
     pkg-config make cmake git wget vulkan-tools mesa-utils \
     g++-arm-linux-gnueabihf g++-aarch64-linux-gnu \
     zlib1g-dev:armhf libdrm-dev:armhf libx11-dev:armhf \
-    libxcb1-dev:armhf libxext-dev:armhf libxfixes-dev:armhf \
+    libxcb1-dev:armhf libxcb-randr0-dev:armhf libxext-dev:armhf libxfixes-dev:armhf \
     libxrender-dev:armhf x11proto-dev:armhf libv4l-dev:armhf \
     zlib1g-dev:arm64 libdrm-dev:arm64 libx11-dev:arm64 \
-    libxcb1-dev:arm64 libxext-dev:arm64 libxfixes-dev:arm64 \
+    libxcb1-dev:arm64 libxcb-randr0-dev:arm64 libxext-dev:arm64 libxfixes-dev:arm64 \
     libxrender-dev:arm64 libxdamage-dev:arm64 libv4l-dev:arm64
-  # fix missing drm_mode.h
-  cp /usr/include/libdrm/drm.h /usr/include/libdrm/drm_mode.h /usr/include/
+
+  # workaround for missing headers
+  cp /usr/include/libdrm/drm.h /usr/include/libdrm/drm_mode.h /usr/include/ || true
 }
 
 #===============================================================================
@@ -73,8 +74,8 @@ fetch_patches_repo() {
 #===============================================================================
 download_unpack() {
   mkdir -p "$BUILD_DIR"
-  [ -f "$MESA_ARCHIVE" ] || \
-    wget -qO "$MESA_ARCHIVE" https://gitlab.freedesktop.org/mesa/mesa/-/archive/main/mesa-main.tar.gz
+  [ -f "$MESA_ARCHIVE" ] || wget -qO "$MESA_ARCHIVE" \
+    https://gitlab.freedesktop.org/mesa/mesa/-/archive/main/mesa-main.tar.gz
   [ -d "$MESA_SRC" ] || tar xf "$MESA_ARCHIVE" -C "$BUILD_DIR"
 }
 
@@ -96,7 +97,7 @@ apply_patches() {
 generate_cross() {
   mkdir -p "$BUILD_DIR"
 
-  # --- aarch64 ---
+  # aarch64
   cat > "$BUILD_DIR/cross_aarch64.txt" <<EOF
 [binaries]
 c = 'aarch64-linux-gnu-gcc'
@@ -116,7 +117,7 @@ cpp_args = c_args
 c_link_args = ['-Wl,--as-needed','-Wl,--gc-sections']
 EOF
 
-  # --- armhf ---
+  # armhf
   cat > "$BUILD_DIR/cross_armhf.txt" <<EOF
 [binaries]
 c = 'arm-linux-gnueabihf-gcc'
@@ -138,25 +139,18 @@ EOF
 }
 
 #===============================================================================
-# 7) Building for a given ARCH
+# 7) Build for a given ARCH
 #===============================================================================
-build_and_package() {
-  ARCH="$1"; CFG="$2"; DEST="$3"
-  case "$ARCH" in
-    aarch64) DEB_ARCH="arm64" ;;
-    armhf)   DEB_ARCH="armhf" ;;
-    *)       DEB_ARCH="$ARCH" ;;
-  esac
+build_arch() {
+  local ARCH="$1" CFG="$2"
+  rm -rf "$BUILD_DIR/build_$ARCH"
+  mkdir -p "$BUILD_DIR/build_$ARCH"
 
-  # for armhf - substitute PKG_CONFIG_LIBDIR so that pkg-config finds .pc of the target architecture.
-  if [ "$ARCH" = "armhf" ]; then
+  if [ "$ARCH" = armhf ]; then
     export PKG_CONFIG_LIBDIR="/usr/lib/arm-linux-gnueabihf/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig"
   else
     unset PKG_CONFIG_LIBDIR
   fi
-
-  rm -rf "$BUILD_DIR/build_$ARCH"
-  mkdir -p "$BUILD_DIR/build_$ARCH"
 
   MESON_LOG_LEVEL=info meson setup "$BUILD_DIR/build_$ARCH" "$MESA_SRC" \
     --cross-file "$CFG" \
@@ -176,26 +170,34 @@ build_and_package() {
     -D b_lto=true
 
   ninja -C "$BUILD_DIR/build_$ARCH" -j"$(nproc)"
-  DESTDIR="$DEST" ninja -C "$BUILD_DIR/build_$ARCH" install
-
-  # create .deb package
-  apt remove -y mesa-vulkan-drivers:"$DEB_ARCH" || true
-  apt download mesa-vulkan-drivers:"$DEB_ARCH"
-  dpkg-deb -x mesa-vulkan-drivers_*_"$DEB_ARCH".deb "$DEST/usr"
-  dpkg-deb -e mesa-vulkan-drivers_*_"$DEB_ARCH".deb "$DEST/DEBIAN"
-  sed -i "s/^Version:.*/Version: $MESA_VER-$DATE/" "$DEST/DEBIAN/control"
-  dpkg-deb --build "$DEST"
 }
 
 #===============================================================================
-# 8) Update /etc/environment for Vulkan ICDs and Turnip debug
+# 8) Install built libraries/configs into the live system
 #===============================================================================
-update_environment() {
-  # ensure our variables are present
+install_flow() {
+  echo ">> Install: checking builds and copying to /usr ..."
+  for ARCH in aarch64 armhf; do
+    if [ ! -d "$BUILD_DIR/build_$ARCH" ]; then
+      echo ">> Build for $ARCH is missing, running build..."
+      build_arch "$ARCH" "$BUILD_DIR/cross_${ARCH}.txt"
+    fi
+
+    local INST="$BUILD_DIR/build_$ARCH/install/usr"
+
+    rsync -a "$INST/lib/${ARCH}-linux-gnu/" /usr/lib/${ARCH}-linux-gnu/
+    mkdir -p /usr/share/vulkan/icd.d
+    rsync -a "$INST/share/vulkan/icd.d/" /usr/share/vulkan/icd.d/
+    rsync -a "$INST/share/drirc.d/" /usr/share/drirc.d/ || true
+  done
+
   grep -qxF 'VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json:/usr/share/vulkan/icd.d/freedreno_icd.armhf.json"' /etc/environment \
     || echo 'VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json:/usr/share/vulkan/icd.d/freedreno_icd.armhf.json"' >> /etc/environment
   grep -qxF 'TU_DEBUG="noconform"' /etc/environment \
     || echo 'TU_DEBUG="noconform"' >> /etc/environment
+
+  ldconfig
+  echo ">> Installation complete."
 }
 
 #===============================================================================
@@ -205,7 +207,7 @@ main() {
   echo ">> Preparing apt sources..."
   prepare_sources
 
-  echo ">> Installing dependencies..."
+  echo ">> Installing build dependencies..."
   install_deps
 
   echo ">> Fetching patch repository..."
@@ -222,18 +224,15 @@ main() {
 
   MESA_VER="$(<"$MESA_SRC/VERSION")"
 
-  echo ">> Building for aarch64..."
-  build_and_package aarch64 "$BUILD_DIR/cross_aarch64.txt" \
-    "$BUILD_DIR/mesa-vk-kgsl_${MESA_VER}-${DATE}-${CODENAME}_arm64"
-
-  echo ">> Building for armhf..."
-  build_and_package armhf "$BUILD_DIR/cross_armhf.txt" \
-    "$BUILD_DIR/mesa-vk-kgsl_${MESA_VER}-${DATE}-${CODENAME}_armhf"
-
-  echo ">> Updating /etc/environment..."
-  update_environment
-
-  echo ">> Build complete. Packages in $BUILD_DIR"
+  if [ "${1:-}" = install ]; then
+    install_flow
+  else
+    echo ">> Building aarch64..."
+    build_arch aarch64 "$BUILD_DIR/cross_aarch64.txt"
+    echo ">> Building armhf..."
+    build_arch armhf "$BUILD_DIR/cross_armhf.txt"
+    echo ">> Build finished; artifacts under $BUILD_DIR/build_*"
+  fi
 }
 
 main "$@"
