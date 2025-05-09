@@ -53,7 +53,8 @@ install_deps() {
     zlib1g-dev:arm64 libdrm-dev:arm64 libx11-dev:arm64 \
     libxcb1-dev:arm64 libxcb-randr0-dev:arm64 libxext-dev:arm64 libxfixes-dev:arm64 \
     libxrender-dev:arm64 libxdamage-dev:arm64 libv4l-dev:arm64 \
-    libxcb-glx0-dev:armhf libxcb-glx0-dev:arm64
+    libxcb-glx0-dev:armhf libxcb-shm0-dev:armhf \
+    libxcb-glx0-dev:arm64 libxcb-shm0-dev:arm64
 
   # workaround for missing headers
   cp /usr/include/libdrm/drm.h /usr/include/libdrm/drm_mode.h /usr/include/ || true
