@@ -187,7 +187,12 @@ install_flow() {
       build_arch "$ARCH" "$BUILD_DIR/cross_${ARCH}.txt"
     fi
 
-    local INST="$BUILD_DIR/build_$ARCH/install/usr"
+    # first, install into a staging tree
+    STAGE="$BUILD_DIR/build_$ARCH/install"
+    rm -rf "$STAGE"
+    mkdir -p "$STAGE"
+    DESTDIR="$STAGE" ninja -C "$BUILD_DIR/build_$ARCH" install
+    local INST="$STAGE/usr"
 
     rsync -a "$INST/lib/${ARCH}-linux-gnu/" /usr/lib/${ARCH}-linux-gnu/
     mkdir -p /usr/share/vulkan/icd.d
