@@ -2,23 +2,30 @@
 
 This script will “attempt” to build mesa-turnip-kgsl. Suitable for Ubuntu. Ubuntu 24 or higher is preferred.
 
-Quick Start build (will require downloading a large amount of these packages and sources):
-
-Build only libs:
-```sh
-bash <(wget -qO- https://github.com/DvaMishkiLapa/mesa-turnip-kgsl-build/raw/main/build_mesa.sh)
-```
-
-Build and install libs:
-```sh
-bash <(wget -qO- https://github.com/DvaMishkiLapa/mesa-turnip-kgsl-build/raw/main/build_mesa.sh) install
-```
-
 - [Build script mesa-turnip-kgsl for Qualcomm Adreno GPU](#build-script-mesa-turnip-kgsl-for-qualcomm-adreno-gpu)
+- [Build and install](#build-and-install)
 - [Tested environment](#tested-environment)
 - [Latest tested Mesa Config](#latest-tested-mesa-config)
 - [Optimization](#optimization)
 - [Thanks](#thanks)
+
+# Build and install
+
+For convenience, run from the root account. The build will take place in `/root/mesa-build`.
+
+```sh
+apt install git
+git clone https://github.com/DvaMishkiLapa/mesa-turnip-kgsl-build.git
+cd mesa-turnip-kgsl-build
+./build_mesa
+```
+
+If you want to build and install in a system, then:
+```sh
+./build_mesa install
+```
+
+The process may take about 20-30 minutes, will take about 300 mb of internal memory.
 
 # Tested environment
 
