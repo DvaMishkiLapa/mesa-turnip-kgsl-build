@@ -80,13 +80,17 @@ download_unpack() {
 }
 
 #===============================================================================
-# 5) Apply all your patches
+# 5) Apply all your patches (idempotent: skips already-applied)
 #===============================================================================
 apply_patches() {
   pushd "$MESA_SRC" >/dev/null
     for p in "$REPO_DIR"/turnip-patches/*.patch; do
       echo ">> Applying patch: $(basename "$p")"
-      patch -p1 < "$p"
+      if patch -p1 --dry-run < "$p" >/dev/null 2>&1; then
+        patch -p1 < "$p"
+      else
+        echo "   Skipping already applied: $(basename "$p")"
+      fi
     done
   popd >/dev/null
 }
