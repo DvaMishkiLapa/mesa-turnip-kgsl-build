@@ -4,8 +4,9 @@ This script will “attempt” to build mesa-turnip-kgsl. Suitable for Ubuntu. U
 
 Quick Start build (will require downloading a large amount of these packages and sources):
 
+Build and install libs:
 ```sh
-bash <(wget -qO- https://github.com/DvaMishkiLapa/mesa-turnip-kgsl-build/raw/main/build_deb_mesa.sh)
+bash <(wget -qO- https://github.com/DvaMishkiLapa/mesa-turnip-kgsl-build/raw/main/build_mesa.sh)
 ```
 
 - [Build script mesa-turnip-kgsl for Qualcomm Adreno GPU](#build-script-mesa-turnip-kgsl-for-qualcomm-adreno-gpu)

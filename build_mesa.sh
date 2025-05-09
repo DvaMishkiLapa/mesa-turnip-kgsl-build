@@ -18,6 +18,11 @@ MESA_VER=""
 # 1) Prepare /etc/apt for ubuntu-ports and enable armhf multiarch
 #===============================================================================
 prepare_sources() {
+  # If there is a ubuntu.sources file left - save it to avoid duplicates
+  if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then
+    mv /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources.bak
+  fi
+
   cat > /etc/apt/sources.list <<EOF
 # Ubuntu-ports ${CODENAME}
 deb http://ports.ubuntu.com/ubuntu-ports ${CODENAME} main restricted universe multiverse
@@ -29,6 +34,7 @@ deb-src http://ports.ubuntu.com/ubuntu-ports ${CODENAME}-updates main restricted
 deb http://ports.ubuntu.com/ubuntu-ports ${CODENAME}-security main restricted universe multiverse
 deb-src http://ports.ubuntu.com/ubuntu-ports ${CODENAME}-security main restricted universe multiverse
 EOF
+
   dpkg --add-architecture armhf
   apt update && apt upgrade -y
 }
