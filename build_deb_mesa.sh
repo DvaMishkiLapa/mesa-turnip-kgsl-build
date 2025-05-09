@@ -29,7 +29,6 @@ deb-src http://ports.ubuntu.com/ubuntu-ports ${CODENAME}-updates main restricted
 deb http://ports.ubuntu.com/ubuntu-ports ${CODENAME}-security main restricted universe multiverse
 deb-src http://ports.ubuntu.com/ubuntu-ports ${CODENAME}-security main restricted universe multiverse
 EOF
-
   dpkg --add-architecture armhf
   apt update && apt upgrade -y
 }
@@ -48,8 +47,7 @@ install_deps() {
     zlib1g-dev:arm64 libdrm-dev:arm64 libx11-dev:arm64 \
     libxcb1-dev:arm64 libxext-dev:arm64 libxfixes-dev:arm64 \
     libxrender-dev:arm64 libxdamage-dev:arm64 libv4l-dev:arm64
-
-  # workaround for missing drm_mode.h
+  # fix missing drm_mode.h
   cp /usr/include/libdrm/drm.h /usr/include/libdrm/drm_mode.h /usr/include/
 }
 
@@ -174,61 +172,49 @@ build_and_package() {
   ninja -C "$BUILD_DIR/build_$ARCH" -j"$(nproc)"
   DESTDIR="$DEST" ninja -C "$BUILD_DIR/build_$ARCH" install
 
-  # package the .deb
+  # create .deb package
   apt remove -y mesa-vulkan-drivers:"$DEB_ARCH" || true
   apt download mesa-vulkan-drivers:"$DEB_ARCH"
   dpkg-deb -x mesa-vulkan-drivers_*_"$DEB_ARCH".deb "$DEST/usr"
   dpkg-deb -e mesa-vulkan-drivers_*_"$DEB_ARCH".deb "$DEST/DEBIAN"
   sed -i "s/^Version:.*/Version: $MESA_VER-$DATE/" "$DEST/DEBIAN/control"
   dpkg-deb --build "$DEST"
-}
-
-#===============================================================================
-# 8) Installing built packages and automatically pulling dependencies
-#===============================================================================
-install_built_packages() {
-  echo ">> Installing freshly built .deb and resolving deps…"
-  dpkg -i "$BUILD_DIR"/mesa-vk-kgsl_*_"$DATE"-"${CODENAME}"_*.deb || true
-  apt-get update
-  apt-get -f install -y
+  rm -f mesa-vulkan-drivers_*_"$DEB_ARCH".deb
 }
 
 #===============================================================================
 # Main
 #===============================================================================
 main() {
-  echo ">> Preparing apt sources…"
+  echo ">> Preparing apt sources..."
   prepare_sources
 
-  echo ">> Installing build dependencies…"
+  echo ">> Installing dependencies..."
   install_deps
 
-  echo ">> Fetching patch repo…"
+  echo ">> Fetching patch repository..."
   fetch_patches_repo
 
-  echo ">> Downloading Mesa source…"
+  echo ">> Downloading Mesa source..."
   download_unpack
 
-  echo ">> Applying patches…"
+  echo ">> Applying patches to Mesa..."
   apply_patches
 
-  echo ">> Generating cross files…"
+  echo ">> Generating Meson cross files..."
   generate_cross
 
   MESA_VER="$(<"$MESA_SRC/VERSION")"
 
-  echo ">> Building for aarch64…"
+  echo ">> Building for aarch64..."
   build_and_package aarch64 "$BUILD_DIR/cross_aarch64.txt" \
     "$BUILD_DIR/mesa-vk-kgsl_${MESA_VER}-${DATE}-${CODENAME}_arm64"
 
-  echo ">> Building for armhf…"
+  echo ">> Building for armhf..."
   build_and_package armhf "$BUILD_DIR/cross_armhf.txt" \
     "$BUILD_DIR/mesa-vk-kgsl_${MESA_VER}-${DATE}-${CODENAME}_armhf"
 
-#   echo ">> Installing built packages…"
-#   install_built_packages
-
-  echo ">> All done. Packages live in $BUILD_DIR"
+  echo ">> Build complete. Packages in $BUILD_DIR"
 }
 
 main "$@"
