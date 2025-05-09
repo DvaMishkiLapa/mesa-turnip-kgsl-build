@@ -45,7 +45,7 @@ EOF
 install_deps() {
   apt build-dep -y mesa
   apt install -y --no-install-recommends \
-    pkg-config make cmake git wget vulkan-tools mesa-utils \
+    pkg-config make cmake git wget vulkan-tools mesa-utils rsync \
     g++-arm-linux-gnueabihf g++-aarch64-linux-gnu \
     zlib1g-dev:armhf libdrm-dev:armhf libx11-dev:armhf \
     libxcb1-dev:armhf libxcb-randr0-dev:armhf libxext-dev:armhf libxfixes-dev:armhf \
