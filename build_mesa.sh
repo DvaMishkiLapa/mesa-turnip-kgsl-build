@@ -210,7 +210,10 @@ install_flow() {
     rsync -a "$INST/lib/${ARCH}-linux-gnu/" /usr/lib/${ARCH}-linux-gnu/
     mkdir -p /usr/share/vulkan/icd.d
     rsync -a "$INST/share/vulkan/icd.d/" /usr/share/vulkan/icd.d/
-    rsync -a "$INST/share/drirc.d/" /usr/share/drirc.d/ || true
+    if [ -d "$INST/share/drirc.d" ]; then
+      mkdir -p /usr/share/drirc.d
+      rsync -a "${INST}/share/drirc.d"/ /usr/share/drirc.d/
+    fi
   done
 
   grep -qxF 'VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json:/usr/share/vulkan/icd.d/freedreno_icd.armhf.json"' /etc/environment \
