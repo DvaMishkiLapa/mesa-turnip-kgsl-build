@@ -60,7 +60,7 @@ install_deps() {
     libxcb-present-dev:armhf libxcb-present-dev:arm64 \
     libxshmfence-dev:armhf libxshmfence-dev:arm64 \
     libxxf86vm-dev:armhf libxxf86vm-dev:arm64 \
-    libxrandr-dev:armhf libxrandr-dev:arm64 \
+    libxrandr-dev:armhf libxrandr-dev:arm64
   # workaround for missing headers
   cp /usr/include/libdrm/drm.h /usr/include/libdrm/drm_mode.h /usr/include/ || true
 }
