@@ -1,10 +1,16 @@
 #!/bin/bash
 set -euo pipefail
 
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run this script as root (e.g. sudo ./build_mesa.sh)"
+  exit 1
+fi
+
 #===============================================================================
 # Variables
 #===============================================================================
-BUILD_DIR="/root/mesa-build"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BUILD_DIR="$SCRIPT_DIR/mesa-build"
 REPO_URL="https://github.com/DvaMishkiLapa/mesa-turnip-kgsl-build.git"
 REPO_DIR="$BUILD_DIR/mesa-turnip-kgsl-build"
 MESA_ARCHIVE="$BUILD_DIR/mesa-main.tar.gz"

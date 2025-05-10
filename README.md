@@ -11,18 +11,18 @@ This script will “attempt” to build mesa-turnip-kgsl. Suitable for Ubuntu. U
 
 # Build and install
 
-For convenience, run from the root account. The build will take place in `/root/mesa-build`.
+For convenience, run from the root account.
 
 ```sh
-apt install git
+sudo apt install git
 git clone https://github.com/DvaMishkiLapa/mesa-turnip-kgsl-build.git
 cd mesa-turnip-kgsl-build
-./build_mesa
+sudo ./build_mesa
 ```
 
 If you want to build and install in a system, then:
 ```sh
-./build_mesa install
+sudo ./build_mesa install
 ```
 
 The process may take about 20-30 minutes, will take about 300 mb of internal memory.
