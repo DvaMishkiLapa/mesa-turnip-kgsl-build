@@ -54,8 +54,13 @@ install_deps() {
     libxcb1-dev:arm64 libxcb-randr0-dev:arm64 libxext-dev:arm64 libxfixes-dev:arm64 \
     libxrender-dev:arm64 libxdamage-dev:arm64 libv4l-dev:arm64 \
     libxcb-glx0-dev:armhf libxcb-shm0-dev:armhf \
-    libxcb-glx0-dev:arm64 libxcb-shm0-dev:arm64
-
+    libxcb-glx0-dev:arm64 libxcb-shm0-dev:arm64 \
+    libx11-xcb-dev:armhf libxcb-keysyms1-dev:armhf libx11-xcb-dev:arm64 libxcb-keysyms1-dev:arm64 \
+    libxcb-dri2-0-dev:armhf libxcb-dri2-0-dev:arm64 libxcb-dri3-dev:armhf libxcb-dri3-dev:arm64 \
+    libxcb-present-dev:armhf libxcb-present-dev:arm64 \
+    libxshmfence-dev:armhf libxshmfence-dev:arm64 \
+    libxxf86vm-dev:armhf libxxf86vm-dev:arm64 \
+    libxrandr-dev:armhf libxrandr-dev:arm64 \
   # workaround for missing headers
   cp /usr/include/libdrm/drm.h /usr/include/libdrm/drm_mode.h /usr/include/ || true
 }
